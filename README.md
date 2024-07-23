@@ -1,29 +1,30 @@
 # Crypto Trading Strategy
 
-This project implements a Flask web application that proposes trading transactions based on Bitcoin (BTC) price data analysis. The analysis includes moving averages, Relative Strength Index (RSI), and Fibonacci retracement levels. The application fetches BTC price data from the CoinGecko API and provides buy/sell signals based on the computed indicators.
+This project provides a simple API for generating buy and sell signals for cryptocurrencies based on technical analysis. It uses moving averages, Relative Strength Index (RSI), and Fibonacci retracement levels to determine the signals.
 
 ## Features
 
-- Fetches BTC price data from CoinGecko API.
-- Calculates 20-day and 50-day moving averages.
-- Calculates RSI with a period of 14.
+- Fetches historical price data for Bitcoin, Ethereum, or Binance Coin from the CoinGecko API.
+- Calculates 7-day and 21-day moving averages.
+- Calculates the Relative Strength Index (RSI).
 - Computes Fibonacci retracement levels.
-- Provides buy/sell signals based on the computed indicators.
+- Generates buy or sell signals based on technical analysis indicators.
 
 ## Endpoints
 
-### `/propose-transaction` (GET)
+### `/strategy` (GET)
 
-This endpoint proposes a trading transaction based on BTC price analysis.
+Returns a buy or sell signal based on the analysis of historical price data.
 
 #### Query Parameters
 
-- `btc_quantity` (float): The current quantity of BTC held.
-- `usdt_amount` (float): The current amount of USDT available.
+- `crypto` (optional): The cryptocurrency to analyze. Can be one of `bitcoin`, `ethereum`, or `binancecoin`. Defaults to `bitcoin`.
 
 #### Example Request
 
-http://localhost:5000/propose-transaction?btc_quantity=1.5&usdt_amount=5000
+```sh
+curl -X GET "http://localhost:5010/strategy?crypto=ethereum"
+```
 
 ## Installation
 
