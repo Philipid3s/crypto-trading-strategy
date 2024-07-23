@@ -4,27 +4,33 @@ import requests
 
 app = Flask(__name__)
 
-# Function to get BTC price data from CoinGecko API
-def get_btc_price_data():
-    url = "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart"
+# Function to get price data from CoinGecko API for a specified cryptocurrency
+def get_price_data(crypto):
+    url = f"https://api.coingecko.com/api/v3/coins/{crypto}/market_chart"
     params = {
         'vs_currency': 'usd',
-        'days': '50',
+        'days': '21',
         'interval': 'daily'
     }
     response = requests.get(url, params=params)
+    response.raise_for_status()  # Raises an HTTPError if the HTTP request returned an unsuccessful status code
     data = response.json()
     prices = [price[1] for price in data['prices']]
     return prices
 
 def calculate_moving_average(prices, period):
+    if len(prices) < period:
+        return []
     return np.convolve(prices, np.ones(period) / period, mode='valid')
 
 def calculate_rsi(prices, period=14):
+    if len(prices) < period:
+        return []
+
     deltas = np.diff(prices)
     seed = deltas[:period+1]
-    up = seed[seed >= 0].sum()/period
-    down = -seed[seed < 0].sum()/period
+    up = seed[seed >= 0].sum() / period
+    down = -seed[seed < 0].sum() / period
     rs = up / down
     rsi = np.zeros_like(prices)
     rsi[:period] = 100. - 100. / (1. + rs)
@@ -61,38 +67,44 @@ def calculate_fibonacci_levels(prices):
     }
     return levels
 
-@app.route('/propose-transaction', methods=['GET'])
-def propose_transaction():
-    current_btc_quantity = float(request.args.get('btc_quantity'))
-    current_usdt_amount = float(request.args.get('usdt_amount'))
+@app.route('/strategy', methods=['GET'])
+def strategy():
+    crypto = request.args.get('crypto', default='bitcoin', type=str)
+    if crypto not in ['bitcoin', 'ethereum', 'binancecoin']:
+        return jsonify({"error": "Invalid cryptocurrency. Choose from 'bitcoin', 'ethereum', or 'binancecoin'."}), 400
+    
+    try:
+        prices = get_price_data(crypto)
+    except requests.RequestException as e:
+        return jsonify({"error": str(e)}), 500
 
-    prices = get_btc_price_data()
-    ma_20 = calculate_moving_average(prices, 20)
-    ma_50 = calculate_moving_average(prices, 50)
+    if len(prices) < 21:
+        return jsonify({"error": "Not enough price data to perform calculations"}), 400
+
+    ma_7 = calculate_moving_average(prices, 7)  # last week
+    ma_21 = calculate_moving_average(prices, 21)  # last 3 weeks
     rsi = calculate_rsi(prices)
-    fibonacci_levels = calculate_fibonacci_levels(prices[-50:])  # Last 50 days
+    fibonacci_levels = calculate_fibonacci_levels(prices[-7:])  # Last 7 days
 
-    latest_price = prices[-1]
     signal = ""
     trigger_price = 0
-    btc_quantity = 0
 
-    if ma_20[-1] > ma_50[-1] and rsi[-1] < 70:
-        signal = "buy"
-        trigger_price = fibonacci_levels["38.2%"]  # Example of using a Fibonacci level as trigger
-        btc_quantity = (current_usdt_amount / latest_price) * 0.1  # Buy up to 10% of available USDT
-    elif ma_20[-1] < ma_50[-1] and rsi[-1] > 30:
-        signal = "sell"
-        trigger_price = fibonacci_levels["61.8%"]  # Example of using a Fibonacci level as trigger
-        btc_quantity = current_btc_quantity * 0.1  # Sell up to 10% of current BTC holdings
+    if ma_7.size > 0 and ma_21.size > 0:
+        # Buy condition
+        if ma_7[-1] > ma_21[-1] and rsi[-1] < 70:
+            signal = "buy"
+            trigger_price = round(fibonacci_levels["38.2%"])  # Conservative entry level
+        # Sell condition
+        elif ma_7[-1] < ma_21[-1] and rsi[-1] > 30:
+            signal = "sell"
+            trigger_price = round(fibonacci_levels["61.8%"])  # Strong retracement leveler
 
     response = {
         "trigger_price": trigger_price,
-        "btc_quantity": btc_quantity,
         "transaction_type": signal
     }
 
     return jsonify(response)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5010)
