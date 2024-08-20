@@ -4,42 +4,39 @@ This project provides a simple API for generating buy and sell signals for crypt
 
 ## Features
 
-
-- **Moving Averages**: Calculate short-term and long-term moving averages to determine buy/sell signals.
-- **Customizable Parameters**: Specify the moving average periods, interval (hourly or daily), and whether to include RSI in the strategy.
-- **Historical Price Data**: Fetch historical price data from Binance API using configurable parameters.
+- Fetch historical price data from Binance.
+- Calculate moving averages and RSI for cryptocurrency prices.
+- Generate buy/sell signals based on trading strategy logic.
+- Include configurable parameters such as moving average periods and intervals.
 
 ## Prerequisites
 
 - Python 3.x
 - Flask
-- Requests
 - NumPy
-- A valid Binance API URL and user ID
+- Requests
+- Moment (via `python-dateutil`)
 
 ## Endpoints
 
 ### `/strategy` (GET)
 
-Description: Get trading strategy recommendations based on historical price data.
+Generate buy/sell signals based on the moving averages and RSI strategy.
 
 #### Query Parameters
 
-- `crypto` (optional): The cryptocurrency to analyze. Can be one of `bitcoin`, `ethereum`, or `binancecoin`. Defaults to `bitcoin`.
-
-- `crypto` (required): Cryptocurrency symbol. Options: bitcoin, ethereum, binancecoin.
-- `startTime` (required): Start time in YYYYMMDDHHmm format.
-- `endTime` (required): End time in YYYYMMDDHHmm format.
+- `crypto` (required): The cryptocurrency symbol (bitcoin, ethereum, binancecoin).
+- `DateTime` (required): Datetime in YYYYMMDDHHmm format for the end time of the price data.
 - `short_ma_period` (optional): Short moving average period in hours. Default: 4.
 - `long_ma_period` (optional): Long moving average period in hours. Default: 24.
-- `interval` (optional): Data interval. Options: 1h (hourly), 1d (daily). Default: 1h.
-- `include_rsi` (optional): Whether to include RSI in the strategy. Options: true, false. Default: false.
+- `include_rsi` (optional): Boolean to include RSI in the strategy calculation (default: true).
+- `rsi_period` (optional): The period for RSI calculation (default: 14).
+- `interval` (optional): Time interval for price data (default: 1h).
 
 #### Example Request
 
 ```bash
-http://localhost:5010/strategy?crypto=bitcoin&startTime=202401010000&endTime=202401020000&short_ma_period=4&long_ma_period=24&interval=1h&include_rsi=false
-
+http://localhost:5010/strategy?crypto=bitcoin&DateTime=202401020000&short_ma_period=4&long_ma_period=24&interval=1h&include_rsi=true
 ```
 
 ## Installation
