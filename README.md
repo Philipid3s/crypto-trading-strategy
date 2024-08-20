@@ -4,26 +4,42 @@ This project provides a simple API for generating buy and sell signals for crypt
 
 ## Features
 
-- Fetches historical price data for Bitcoin, Ethereum, or Binance Coin from the CoinGecko API.
-- Calculates 7-day and 21-day moving averages.
-- Calculates the Relative Strength Index (RSI).
-- Computes Fibonacci retracement levels.
-- Generates buy or sell signals based on technical analysis indicators.
+
+- **Moving Averages**: Calculate short-term and long-term moving averages to determine buy/sell signals.
+- **Customizable Parameters**: Specify the moving average periods, interval (hourly or daily), and whether to include RSI in the strategy.
+- **Historical Price Data**: Fetch historical price data from Binance API using configurable parameters.
+
+## Prerequisites
+
+- Python 3.x
+- Flask
+- Requests
+- NumPy
+- A valid Binance API URL and user ID
 
 ## Endpoints
 
 ### `/strategy` (GET)
 
-Returns a buy or sell signal based on the analysis of historical price data.
+Description: Get trading strategy recommendations based on historical price data.
 
 #### Query Parameters
 
 - `crypto` (optional): The cryptocurrency to analyze. Can be one of `bitcoin`, `ethereum`, or `binancecoin`. Defaults to `bitcoin`.
 
+- `crypto` (required): Cryptocurrency symbol. Options: bitcoin, ethereum, binancecoin.
+- `startTime` (required): Start time in YYYYMMDDHHmm format.
+- `endTime` (required): End time in YYYYMMDDHHmm format.
+- `short_ma_period` (optional): Short moving average period in hours. Default: 4.
+- `long_ma_period` (optional): Long moving average period in hours. Default: 24.
+- `interval` (optional): Data interval. Options: 1h (hourly), 1d (daily). Default: 1h.
+- `include_rsi` (optional): Whether to include RSI in the strategy. Options: true, false. Default: false.
+
 #### Example Request
 
-```sh
-curl -X GET "http://localhost:5010/strategy?crypto=ethereum"
+```bash
+http://localhost:5010/strategy?crypto=bitcoin&startTime=202401010000&endTime=202401020000&short_ma_period=4&long_ma_period=24&interval=1h&include_rsi=false
+
 ```
 
 ## Installation
