@@ -13,7 +13,7 @@ SYMBOL_MAP = {
     'binancecoin': 'BNBUSDT'
 }
 
-def get_historical_price_range(symbol, startTime, endTime, interval='1h', market='spot', environment='live'):
+def get_historical_price_range(symbol, user, startTime, endTime, interval='1h', market='spot', environment='live'):
     binance_symbol = SYMBOL_MAP.get(symbol.lower())
     if not binance_symbol:
         raise ValueError("Invalid symbol. Supported symbols are 'bitcoin', 'ethereum', 'binancecoin'.")
@@ -21,7 +21,7 @@ def get_historical_price_range(symbol, startTime, endTime, interval='1h', market
     url = config.HISTORICAL_PRICE_RANGE_API_URL  # Use the URL from the config file
     
     params = {
-        'user': config.USER_ID,  # Use the user ID from the config file
+        'user': user, 
         'symbol': binance_symbol,
         'startTime': startTime,
         'endTime': endTime,
@@ -83,6 +83,7 @@ def calculate_fibonacci_levels(prices):
 @app.route('/strategy', methods=['GET'])
 def strategy():
     crypto = request.args.get('crypto', default='bitcoin', type=str)
+    user = request.args.get('user', default='1', type=str)
     datetime_param = request.args.get('DateTime', type=str)  # Replacing startTime and endTime with DateTime
     short_ma_period = request.args.get('short_ma_period', default=4, type=int)
     long_ma_period = request.args.get('long_ma_period', default=24, type=int)
@@ -112,7 +113,7 @@ def strategy():
         end_time_str = end_time.strftime('%Y%m%d%H%M')
         
         # Use the historical price range endpoint to get data
-        prices_data = get_historical_price_range(crypto, start_time_str, end_time_str, interval)
+        prices_data = get_historical_price_range(crypto, user, start_time_str, end_time_str, interval)
         prices = [float(data['close']) for data in prices_data]
     except requests.RequestException as e:
         return jsonify({"error": str(e)}), 500
