@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Crypto Trading Strategy Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@600;700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base: #0e0d0b;
+      --bg-surface: #1a1815;
+      --bg-hover: #262320;
+      --bg-input: #141310;
+      --text-primary: #e8e4dc;
+      --text-muted: #908878;
+      --accent-base: #e09830;
+      --accent-hover: #eca840;
+      --accent-soft: rgba(224, 152, 48, 0.1);
+      --border: #2e2a24;
+      --shadow: rgba(0, 0, 0, 0.5);
+      --radius-pill: 999px;
+      --radius-card: 16px;
+      --radius-check: 4px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Figtree", sans-serif;
+      color: var(--text-primary);
+      background:
+        radial-gradient(650px 400px at 10% 0%, rgba(224, 152, 48, 0.14), transparent 60%),
+        radial-gradient(500px 350px at 90% 8%, rgba(224, 152, 48, 0.08), transparent 60%),
+        var(--bg-base);
+      min-height: 100vh;
+    }
+
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 16px 40px;
+    }
+
+    .hero {
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-family: "Bodoni Moda", serif;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      font-size: clamp(1.8rem, 3vw, 2.8rem);
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--text-muted);
+      max-width: 700px;
+    }
+
+    .hero-actions {
+      margin-top: 12px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 16px;
+    }
+
+    .card {
+      background: linear-gradient(160deg, rgba(255, 255, 255, 0.015), rgba(255, 255, 255, 0)) , var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 10px 30px var(--shadow);
+      padding: 18px;
+    }
+
+    .card h2 {
+      margin: 0 0 14px;
+      font-family: "Bodoni Moda", serif;
+      font-weight: 600;
+      font-size: 1.3rem;
+    }
+
+    .fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .field.full { grid-column: 1 / -1; }
+
+    label {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .label-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .help-btn {
+      border: 1px solid var(--border);
+      background: var(--bg-input);
+      color: var(--text-muted);
+      border-radius: 999px;
+      height: 20px;
+      width: 20px;
+      padding: 0;
+      line-height: 1;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .help-btn:hover {
+      color: var(--text-primary);
+      border-color: var(--accent-base);
+      background: var(--bg-hover);
+    }
+
+    .help-btn:focus-visible {
+      outline: 2px solid var(--accent-base);
+      outline-offset: 2px;
+    }
+
+    input, select {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      padding: 10px 14px;
+      background: var(--bg-input);
+      color: var(--text-primary);
+      outline: none;
+      font: inherit;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent-base);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    .switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+      font-size: 0.95rem;
+      width: fit-content;
+      position: relative;
+    }
+
+    .switch input {
+      position: absolute;
+      opacity: 0;
+      width: 1px;
+      height: 1px;
+      pointer-events: none;
+    }
+
+    .switch .track {
+      width: 46px;
+      height: 27px;
+      border-radius: 999px;
+      background: var(--border);
+      position: relative;
+      transition: 0.2s ease;
+    }
+
+    .switch .thumb {
+      width: 19px;
+      height: 19px;
+      border-radius: 50%;
+      background: #fff;
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      transition: 0.2s ease;
+    }
+
+    .switch input:checked + .track {
+      background: var(--accent-base);
+    }
+
+    .switch input:checked + .track .thumb {
+      transform: translateX(19px);
+    }
+
+    .switch input:focus-visible + .track {
+      outline: 2px solid var(--accent-base);
+      outline-offset: 2px;
+    }
+
+    .check {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .check input {
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-check);
+      background: var(--bg-input);
+      margin: 0;
+    }
+
+    .check input:checked {
+      background: var(--accent-base);
+      border-color: var(--accent-base);
+    }
+
+    input[type="range"] {
+      accent-color: var(--accent-base);
+      padding: 0;
+      height: 26px;
+      background: transparent;
+      border: 0;
+    }
+
+    .range-value {
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 0.88rem;
+      background: var(--accent-soft);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 5px 10px;
+      width: fit-content;
+    }
+
+    .actions {
+      margin-top: 14px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border-radius: var(--radius-pill);
+      padding: 10px 16px;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: 0.2s ease;
+    }
+
+    .btn.primary {
+      background: var(--accent-base);
+      color: #fff;
+    }
+    .btn.primary:hover { background: var(--accent-hover); }
+
+    .btn.secondary {
+      background: transparent;
+      color: var(--accent-base);
+      border-color: var(--border);
+    }
+    .btn.secondary:hover { background: var(--bg-hover); }
+
+    .btn.link {
+      background: transparent;
+      color: var(--text-muted);
+      text-decoration: underline;
+      border: 0;
+      padding-left: 2px;
+      padding-right: 2px;
+    }
+
+    .result {
+      display: grid;
+      gap: 10px;
+    }
+
+    .metric {
+      padding: 12px;
+      border: 1px solid var(--border);
+      background: var(--bg-input);
+      border-radius: 12px;
+    }
+
+    .metric .label {
+      color: var(--text-muted);
+      font-size: 0.83rem;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .metric .value {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .status {
+      margin-top: 8px;
+      color: var(--text-muted);
+      min-height: 20px;
+      font-size: 0.93rem;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 30;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal {
+      width: min(680px, 100%);
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 20px 40px var(--shadow);
+      padding: 16px;
+    }
+
+    .modal h3 {
+      margin: 0 0 8px;
+      font-family: "Bodoni Moda", serif;
+      font-size: 1.2rem;
+    }
+
+    .modal p {
+      margin: 0;
+      color: var(--text-primary);
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+
+    .modal-actions {
+      margin-top: 12px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+      .fields { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <h1>Crypto Trading Strategy Console</h1>
+      <p>Configure parameters, run the signal model, and inspect entry plus risk levels from your API in one view.</p>
+      <div class="hero-actions">
+        <button class="btn secondary" type="button" id="how-it-works-btn">How It Works</button>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>Strategy Controls</h2>
+        <form id="strategy-form">
+          <div class="fields">
+            <div class="field">
+              <label for="crypto" class="label-row">Crypto <button type="button" class="help-btn" data-help-title="Crypto" data-help="Select the asset symbol used by the strategy. Supported values are bitcoin, ethereum, and binancecoin."><span aria-hidden="true">i</span></button></label>
+              <select id="crypto" name="crypto">
+                <option value="bitcoin">Bitcoin</option>
+                <option value="ethereum">Ethereum</option>
+                <option value="binancecoin">Binance Coin</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="DateTime" class="label-row">DateTime (YYYYMMDDHHmm) <button type="button" class="help-btn" data-help-title="DateTime" data-help="End timestamp for the analysis window. Format: YYYYMMDDHHmm, for example 202603011430."><span aria-hidden="true">i</span></button></label>
+              <input id="DateTime" name="DateTime" required>
+            </div>
+
+            <div class="field">
+              <label for="short_ma_period" class="label-row">Short MA <button type="button" class="help-btn" data-help-title="Short MA" data-help="Short moving average period in bars. Reacts faster to price changes and is used in crossover detection."><span aria-hidden="true">i</span></button></label>
+              <input id="short_ma_period" name="short_ma_period" type="number" min="1" value="4">
+            </div>
+            <div class="field">
+              <label for="long_ma_period" class="label-row">Long MA <button type="button" class="help-btn" data-help-title="Long MA" data-help="Long moving average period in bars. Defines broader trend and is paired with Short MA for crossover signals."><span aria-hidden="true">i</span></button></label>
+              <input id="long_ma_period" name="long_ma_period" type="number" min="1" value="24">
+            </div>
+
+            <div class="field">
+              <label for="rsi_period" class="label-row">RSI Period <button type="button" class="help-btn" data-help-title="RSI Period" data-help="Number of bars used to compute RSI. Higher values are smoother but slower."><span aria-hidden="true">i</span></button></label>
+              <input id="rsi_period" name="rsi_period" type="number" min="1" value="14">
+            </div>
+            <div class="field">
+              <label for="interval" class="label-row">Interval <button type="button" class="help-btn" data-help-title="Interval" data-help="Candle timeframe used for data and indicators. 1h is hourly, 1d is daily."><span aria-hidden="true">i</span></button></label>
+              <select id="interval" name="interval">
+                <option value="1h">1h</option>
+                <option value="1d">1d</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="fib_lookback" class="label-row">Fib Lookback <button type="button" class="help-btn" data-help-title="Fib Lookback" data-help="Number of recent bars used to compute Fibonacci retracement levels."><span aria-hidden="true">i</span></button></label>
+              <input id="fib_lookback" name="fib_lookback" type="number" min="2" value="50">
+            </div>
+            <div class="field">
+              <label for="warmup_bars" class="label-row">Warmup Bars <button type="button" class="help-btn" data-help-title="Warmup Bars" data-help="Extra historical bars requested before calculations to stabilize indicators."><span aria-hidden="true">i</span></button></label>
+              <input id="warmup_bars" name="warmup_bars" type="number" min="0" value="100">
+            </div>
+
+            <div class="field full">
+              <div class="label-row">
+                <label for="include_rsi">Include RSI Confirmation</label>
+                <button type="button" class="help-btn" data-help-title="Include RSI Confirmation" data-help="When enabled, MA crossover signals are filtered by RSI trend condition (RSI > 50 for buy, RSI < 50 for sell)."><span aria-hidden="true">i</span></button>
+              </div>
+              <label class="switch" for="include_rsi">
+                <input id="include_rsi" name="include_rsi" type="checkbox">
+                <span class="track"><span class="thumb"></span></span>
+              </label>
+            </div>
+
+            <div class="field full">
+              <label for="atr_multiplier" class="label-row">ATR Multiplier <button type="button" class="help-btn" data-help-title="ATR Multiplier" data-help="Defines stop-loss distance as ATR x multiplier. Larger values allow wider stops."><span aria-hidden="true">i</span></button></label>
+              <input id="atr_multiplier" name="atr_multiplier" type="range" min="0.5" max="5" step="0.1" value="1.5">
+              <span class="range-value" id="atr-multiplier-value">1.5</span>
+            </div>
+
+            <div class="field full">
+              <label for="risk_reward" class="label-row">Risk/Reward <button type="button" class="help-btn" data-help-title="Risk/Reward" data-help="Target multiple relative to risk. Example: 2.0 means take-profit distance is 2x stop distance."><span aria-hidden="true">i</span></button></label>
+              <input id="risk_reward" name="risk_reward" type="range" min="1" max="5" step="0.1" value="2.0">
+              <span class="range-value" id="risk-reward-value">2.0</span>
+            </div>
+
+            <div class="field full">
+              <label class="check">
+                <input id="paper_mode" type="checkbox">
+                Paper mode (visual only)
+                <button type="button" class="help-btn" data-help-title="Paper Mode" data-help="UI-only toggle for future extension. It does not change backend behavior in the current version."><span aria-hidden="true">i</span></button>
+              </label>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn primary" type="submit">Run Strategy</button>
+            <button class="btn secondary" type="button" id="reset-btn">Reset</button>
+            <button class="btn link" type="button" id="fill-now-btn">Use Current Time</button>
+          </div>
+          <div class="status" id="status"></div>
+        </form>
+      </article>
+
+      <article class="card">
+        <h2>Signal Output</h2>
+        <div class="result">
+          <div class="metric"><span class="label">Transaction Type</span><span class="value" id="transaction_type">-</span></div>
+          <div class="metric"><span class="label">Trigger Price</span><span class="value" id="trigger_price">-</span></div>
+          <div class="metric"><span class="label">Entry Price</span><span class="value" id="entry_price">-</span></div>
+          <div class="metric"><span class="label">Stop Loss</span><span class="value" id="stop_loss">-</span></div>
+          <div class="metric"><span class="label">Take Profit</span><span class="value" id="take_profit">-</span></div>
+          <div class="metric"><span class="label">Risk Reward</span><span class="value" id="risk_reward_out">-</span></div>
+          <div class="metric"><span class="label">ATR</span><span class="value" id="atr">-</span></div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="info-modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <h3 id="modal-title">Parameter Info</h3>
+      <p id="modal-content"></p>
+      <div class="modal-actions">
+        <button class="btn secondary" type="button" id="close-modal-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById("strategy-form");
+    const statusEl = document.getElementById("status");
+    const atrSlider = document.getElementById("atr_multiplier");
+    const rrSlider = document.getElementById("risk_reward");
+    const atrLabel = document.getElementById("atr-multiplier-value");
+    const rrLabel = document.getElementById("risk-reward-value");
+    const modal = document.getElementById("info-modal");
+    const modalTitle = document.getElementById("modal-title");
+    const modalContent = document.getElementById("modal-content");
+
+    function yyyymmddhhmm(date) {
+      const p = (n) => String(n).padStart(2, "0");
+      return `${date.getFullYear()}${p(date.getMonth() + 1)}${p(date.getDate())}${p(date.getHours())}${p(date.getMinutes())}`;
+    }
+
+    function setCurrentTime() {
+      document.getElementById("DateTime").value = yyyymmddhhmm(new Date());
+    }
+
+    function setOutput(data) {
+      const fields = ["transaction_type", "trigger_price", "entry_price", "stop_loss", "take_profit", "atr"];
+      fields.forEach((id) => {
+        const value = data[id];
+        document.getElementById(id).textContent = value === null || value === undefined ? "-" : value;
+      });
+      document.getElementById("risk_reward_out").textContent = data.risk_reward ?? "-";
+    }
+
+    function clearOutput() {
+      setOutput({
+        transaction_type: "-",
+        trigger_price: "-",
+        entry_price: "-",
+        stop_loss: "-",
+        take_profit: "-",
+        atr: "-",
+        risk_reward: "-"
+      });
+      statusEl.textContent = "";
+    }
+
+    atrSlider.addEventListener("input", () => { atrLabel.textContent = atrSlider.value; });
+    rrSlider.addEventListener("input", () => { rrLabel.textContent = rrSlider.value; });
+
+    function openInfo(title, content) {
+      modalTitle.textContent = title;
+      modalContent.textContent = content;
+      modal.classList.add("open");
+    }
+
+    function closeInfo() {
+      modal.classList.remove("open");
+    }
+
+    document.querySelectorAll(".help-btn").forEach((btn) => {
+      btn.setAttribute("aria-label", `${btn.dataset.helpTitle || "Parameter"} info`);
+      btn.addEventListener("click", () => {
+        openInfo(btn.dataset.helpTitle || "Info", btn.dataset.help || "No details available.");
+      });
+    });
+
+    document.getElementById("how-it-works-btn").addEventListener("click", () => {
+      openInfo(
+        "How It Works",
+        "1) The API fetches historical candles from the selected market data provider.\n2) It computes short and long moving averages, then detects bullish or bearish crossover events.\n3) If RSI confirmation is enabled, signals are filtered by momentum (RSI > 50 for buys, RSI < 50 for sells).\n4) Fibonacci levels provide trigger context.\n5) ATR is used to calculate stop-loss and take-profit using your ATR multiplier and risk/reward settings.\n6) The output includes transaction_type, trigger_price, entry_price, stop_loss, take_profit, risk_reward, and atr."
+      );
+    });
+
+    document.getElementById("close-modal-btn").addEventListener("click", closeInfo);
+    modal.addEventListener("click", (event) => {
+      if (event.target === modal) closeInfo();
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeInfo();
+    });
+
+    document.getElementById("fill-now-btn").addEventListener("click", setCurrentTime);
+    document.getElementById("reset-btn").addEventListener("click", () => {
+      form.reset();
+      atrLabel.textContent = "1.5";
+      rrLabel.textContent = "2.0";
+      setCurrentTime();
+      clearOutput();
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      statusEl.textContent = "Running strategy...";
+
+      const params = new URLSearchParams();
+      const formData = new FormData(form);
+      for (const [key, value] of formData.entries()) {
+        if (key === "include_rsi") continue;
+        if (value !== "") params.set(key, value);
+      }
+      params.set("include_rsi", document.getElementById("include_rsi").checked ? "true" : "false");
+
+      try {
+        const response = await fetch(`/strategy?${params.toString()}`);
+        const payload = await response.json();
+        if (!response.ok) {
+          throw new Error(payload.error || "Request failed");
+        }
+        setOutput(payload);
+        statusEl.textContent = "Signal generated.";
+      } catch (error) {
+        statusEl.textContent = `Error: ${error.message}`;
+      }
+    });
+
+    setCurrentTime();
+    clearOutput();
+  </script>
+</body>
+</html>
